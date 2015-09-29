@@ -36,4 +36,4 @@ class inst_msg( BitStructDefinition ):
     # result to right neighbor, if bit 3 is set, then send
     # result to left neighbor. If both bit 2 and bit 3 are set,
     # then send result to both neighbors.
-    s.des  = BitField( 7 )
+    s.des  = BitField( 5 )
