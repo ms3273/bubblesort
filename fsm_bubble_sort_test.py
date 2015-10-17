@@ -18,11 +18,13 @@ class TestHarness( Model ):
 
     # Instantiate models
     
-    s.src_0_in = TestSource (1, src_0_in_msgs, src_delay)
-    s.src_1_in = TestSource (1, src_1_in_msgs, src_delay)
+#    s.src_0_in = TestSource (1, src_0_in_msgs, src_delay)
+#    s.src_1_in = TestSource (1, src_1_in_msgs, src_delay)
+    s.done_in  = TestSource (1, done_signal,   src_delay)
 
-    s.sink_0_out = TestSink (inst_msg(), sink_0_out_msgs, sink_delay)
-    s.sink_1_out = TestSink (inst_msg(), sink_1_out_msgs, sink_delay)
+    s.ocm_reqs   = TestSink (2,          ocm_in_sel,      sink_delay)
+#    s.sink_0_out = TestSink (inst_msg(), sink_0_out_msgs, sink_delay)
+#    s.sink_1_out = TestSink (inst_msg(), sink_1_out_msgs, sink_delay)
 
     s.fsm = fsm_model
 
@@ -30,25 +32,28 @@ class TestHarness( Model ):
 
     # Connect
 
-    s.connect( s.src_0_in.out,   s.fsm.in_[0] )
-    s.connect( s.src_1_in.out,   s.fsm.in_[1] )
+    s.connect( s.src_0_in.out,    s.fsm.in_[0] )
+    s.connect( s.src_1_in.out,    s.fsm.in_[1] )
+    s.connect( s.done_signal.out, s.fsm.in_done )
 
     s.connect( s.sink_0_out.in_, s.fsm.out[0] )
     s.connect( s.sink_1_out.in_, s.fsm.out[1] )
 
   def done( s ):
-    return s.src_0_in.done and s.src_1_in.done and s.sink_0_out.done and s.sink_1_out.done
+    return s.src_0_in.done and s.src_1_in.done and s.sink_0_out.done and s.sink_1_out.done and s.done_in.done
 
   def line_trace( s ):
-    return s.src_0_in.line_trace() + "()" + s.src_1_in.line_trace() + "()" + s.sink_0_out.line_trace() + "()" + s.sink_1_out.line_trace() + "()" + s.fsm.line_trace()
+    return s.src_0_in.line_trace() + "()" + s.src_1_in.line_trace() + "()" + s.done_signal.line_trace() + "()" + s.sink_0_out.line_trace() + "()" + s.sink_1_out.line_trace() + "()" + s.fsm.line_trace()
 
 
-def inst(opcode, src0, src1, des):
+def inst(opcode, src0, src1, des, rd_wr, addr):
   msg = inst_msg()
-  msg.ctl  = opcode
-  msg.src0 = src0
-  msg.src1 = src1
-  msg.des  = des
+  msg.ctl   = opcode
+  msg.src0  = src0
+  msg.src1  = src1
+  msg.des   = des
+  msg.rd_wr = rd_wr
+  msg.addr  = addr
   return msg
 
 

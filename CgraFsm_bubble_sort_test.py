@@ -4,22 +4,23 @@
 
 import pytest
 
-from pymtl        import *
-from pclib.test   import TestSource, TestSink
+from pymtl                import *
+from pclib.test           import TestSource, TestSink
 from CgraFsm_bubble_sort  import CgraFsm
-from utils        import *
-
+from utils                import *
+from pclib.ifcs                    import MemMsg, MemReqMsg, MemRespMsg
 #-------------------------------------------------------------------------
 # TestHarness
 #-------------------------------------------------------------------------
 class TestHarness( Model ):
 
-  def __init__( s, CgraFsm_model, src_mem_in_msgs, sink_mem_out_msgs, src_delay, sink_delay ):
+  def __init__( s, CgraFsm_model, src_mem_in_msgs, sink_mem_out_msgs, sink_mem_proxy_msgs, src_delay, sink_delay ):
 
     # Instantiate models
     
-    s.src_mem_in   = TestSource (nWid, src_mem_in_msgs,     src_delay  )
-    s.sink_mem_out = TestSink   (nWid, sink_mem_out_msgs,   sink_delay )
+    s.src_mem_in     = TestSource (MemReqMsg(1,32,nWid), src_mem_in_msgs,     src_delay  )
+    s.sink_mem_out   = TestSink   (MemRespMsg(1,  nWid), sink_mem_out_msgs,   sink_delay )
+    s.sink_mem_proxy = TestSink   (MemRespMsg(1,  nWid), sink_mem_proxy_msgs, sink_delay  )
 
     s.CgraFsm = CgraFsm_model
 
@@ -27,8 +28,14 @@ class TestHarness( Model ):
 
     # Connect
 
+    # test to DUT
+
     s.connect( s.src_mem_in.out,   s.CgraFsm.in_mem  )
-    s.connect( s.sink_mem_out.in_, s.CgraFsm.out_mem )
+    s.connect( s.src_mem_in.done,  s.CgraFsm.in_done )
+
+    # DUT to test
+    s.connect( s.sink_mem_out.in_,   s.CgraFsm.out_mem       )
+    s.connect( s.sink_mem_proxy.in_, s.CgraFsm.out_mem_proxy )
 
   def done( s ):
     return s.src_mem_in.done and s.sink_mem_out.done
@@ -36,6 +43,39 @@ class TestHarness( Model ):
   def line_trace( s ):
     return s.src_mem_in.line_trace() + " | " + s.CgraFsm.line_trace() + " | " + s.sink_mem_out.line_trace()
 
+#             0b    32b         1b     16b
+#          opaque  addr               data
+#    3b    nbits   nbits       calc   nbits
+#  +------+------+-----------+------+-----------+
+#  | type |opaque| addr      | len  | data      |
+#  +------+------+-----------+------+-----------+
+
+#             0b            1b    16b   
+#          opaque                data
+#    3b    nbits   2b     calc   nbits
+#  +------+------+------+------+-----------+
+#  | type |opaque| test | len  | data      |
+#  +------+------+------+------+-----------+
+
+
+
+def memreq(typ, addr1, len, data):
+  msg       = MemReqMsg(1,32,nWid)
+  msg.type_ = Bits( 3,  typ   )
+  msg.opaque= Bits( 1,  0     )
+  msg.addr  = Bits( 32, addr1 )
+  msg.len   = Bits( 1,  len   )
+  msg.data  = Bits( 16, data  )
+  return msg
+
+def memresp(typ, test, len, data):
+  msg = MemRespMsg(1,nWid)
+  msg.type_ = Bits( 3,  typ   )
+  msg.opaque= Bits( 1,  0    )
+  msg.test  = Bits( 2, test  )
+  msg.len   = Bits( 1,  len   )
+  msg.data  = Bits( 16, data  )
+  return msg
 
 #-------------------------------------------------------------------------
 # Run test
@@ -45,8 +85,15 @@ def run_sel_test( ModelType, src_delay, sink_delay, test_verilog ):
 
   # test operands
 
-  src_mem_in_msgs   = [0x7, 0x2, 0x8, 0x4, 22, 4, 19, 25]
-  sink_mem_out_msgs = [0x1, 0x4, 2, 1]
+
+
+  src_mem_in_msgs   = [memreq(1, 0x0, 0, 2), memreq(1, 0x2, 0, 5), memreq(1, 0x4, 0, 2) ]
+
+
+
+  sink_mem_out_msgs = [memresp(0, 0, 0, 2), memresp(0,0,0, 5)]
+
+  sink_mem_proxy_msgs = [memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0)]
 
   # Instantiate and elaborate the model
 
@@ -54,7 +101,7 @@ def run_sel_test( ModelType, src_delay, sink_delay, test_verilog ):
   if test_verilog:
     model_under_test = TranslationTool( model_under_test )
 
-  model = TestHarness( model_under_test, src_mem_in_msgs, sink_mem_out_msgs, src_delay, sink_delay )
+  model = TestHarness( model_under_test, src_mem_in_msgs, sink_mem_out_msgs, sink_mem_proxy_msgs, src_delay, sink_delay )
   model.elaborate()
 
   # Create a simulator using the simulation tool
