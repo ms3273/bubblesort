@@ -14,13 +14,13 @@ from pclib.ifcs                    import MemMsg, MemReqMsg, MemRespMsg
 #-------------------------------------------------------------------------
 class TestHarness( Model ):
 
-  def __init__( s, CgraFsm_model, src_mem_in_msgs, sink_mem_out_msgs, sink_mem_proxy_msgs, src_delay, sink_delay ):
+  def __init__( s, CgraFsm_model, src_mem_in_msgs, sink_mem_out_msgs, src_delay, sink_delay ):
 
     # Instantiate models
     
     s.src_mem_in     = TestSource (MemReqMsg(1,32,nWid), src_mem_in_msgs,     src_delay  )
     s.sink_mem_out   = TestSink   (MemRespMsg(1,  nWid), sink_mem_out_msgs,   sink_delay )
-    s.sink_mem_proxy = TestSink   (MemRespMsg(1,  nWid), sink_mem_proxy_msgs, sink_delay  )
+#    s.sink_mem_proxy = TestSink   (MemRespMsg(1,  nWid), sink_mem_proxy_msgs, sink_delay  )
 
     s.CgraFsm = CgraFsm_model
 
@@ -35,7 +35,7 @@ class TestHarness( Model ):
 
     # DUT to test
     s.connect( s.sink_mem_out.in_,   s.CgraFsm.out_mem       )
-    s.connect( s.sink_mem_proxy.in_, s.CgraFsm.out_mem_proxy )
+#    s.connect( s.sink_mem_proxy.in_, s.CgraFsm.out_mem_proxy )
 
   def done( s ):
     return s.src_mem_in.done and s.sink_mem_out.done
@@ -93,7 +93,7 @@ def run_sel_test( ModelType, src_delay, sink_delay, test_verilog ):
 
   sink_mem_out_msgs = [memresp(0, 0, 0, 1), memresp(0, 0, 0, 3), memresp(0,0,0, 4), memresp(0,0,0, 5), memresp(0, 0, 0, 10)]
 
-  sink_mem_proxy_msgs = [memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0)]
+#  sink_mem_proxy_msgs = [memresp(1,0,0,0)]
 
   # Instantiate and elaborate the model
 
@@ -101,7 +101,7 @@ def run_sel_test( ModelType, src_delay, sink_delay, test_verilog ):
   if test_verilog:
     model_under_test = TranslationTool( model_under_test )
 
-  model = TestHarness( model_under_test, src_mem_in_msgs, sink_mem_out_msgs, sink_mem_proxy_msgs, src_delay, sink_delay )
+  model = TestHarness( model_under_test, src_mem_in_msgs, sink_mem_out_msgs, src_delay, sink_delay )
   model.vcd_file = "regincr-sim.vcd"
   model.elaborate()
 
@@ -110,10 +110,13 @@ def run_sel_test( ModelType, src_delay, sink_delay, test_verilog ):
   sim = SimulationTool( model )
 
   # Run the simulation
+  a = 0
+
   print()
 
   sim.reset()
-  while not model.done():
+  while not model.done() and a < 90:
+    a = a + 1
     sim.print_line_trace()
     sim.cycle()
 

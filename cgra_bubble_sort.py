@@ -25,7 +25,7 @@ class CgraRTL( Model):
 
     s.in_mem       = InValRdyBundle (MemReqMsg(1,32,nWid)) 
     s.out_mem      = OutValRdyBundle(MemRespMsg(1,  nWid))
-    s.out_mem_proxy = OutValRdyBundle(MemRespMsg(1, nWid))
+#    s.out_mem_proxy = OutValRdyBundle(MemRespMsg(1, nWid))
 
     s.ocm_reqs_sel  = InPort(2)
     s.ocm_resps_sel = InPort(4)
@@ -33,6 +33,7 @@ class CgraRTL( Model):
     #Memory
 
     s.ocm = TestMemory( MemMsg(1 , 32, nWid) )  # nports, stall_prob, latency, mem_nbytes
+    s.wr_capture = RegRst (MemRespMsg(1,nWid), 0)
 
 
     #PEs
@@ -69,7 +70,8 @@ class CgraRTL( Model):
       m.out[0],  s.out_mem.msg,
       m.out[1],  s.pe[0].ocmresps.msg,
       m.out[2],  s.pe[1].ocmresps.msg,
-      m.out[3],  s.out_mem_proxy.msg,
+#      m.out[3],  s.out_mem_proxy.msg,
+      m.out[3],  s.wr_capture.in_,
       m.in_,     s.ocm.resps[0].msg,
       m.sel,     s.ocm_resps_sel,
     )    
@@ -88,7 +90,7 @@ class CgraRTL( Model):
       s.out_mem.val.value         = 0
 #      s.pe[0].ocmresps.val.value  = 0
 #      s.pe[1].ocmresps.val.value  = 0
-      s.out_mem_proxy.val.value   = 0
+#      s.out_mem_proxy.val.value   = 0
       s.ocm.resps[0].rdy.value    = 0
 
 #      s.ocm_reqs_sel.value = 0
@@ -128,8 +130,8 @@ class CgraRTL( Model):
         s.pe[0].ocmresps.val.value  = 0
 
       elif (s.ocm_resps_sel == MEM_PROXY):
-        s.out_mem_proxy.val.value = s.ocm.resps[0].val
-        s.ocm.resps[0].rdy.value   = s.out_mem_proxy.rdy
+      #  s.out_mem_proxy.val.value = s.ocm.resps[0].val
+        s.ocm.resps[0].rdy.value   =  1
         s.pe[0].ocmresps.val.value  = 0        
         s.pe[1].ocmresps.val.value  = 0
 

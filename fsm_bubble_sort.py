@@ -33,7 +33,9 @@ class fsm( Model ):
     # Register definition
     s.state = RegRst(LOG_NUM_STATE, 0)
 
+
     s.large = RegRst(1,0)  # 1 bit data to be stored with 0 initialized, i.e PE0 has large value
+    s.result = RegRst(1,0)  # 1 bit data to be stored with 0 initialized, i.e PE0 has large value
 
     s.RD_ADDR = RegEnRst(32, 2)
 
@@ -335,8 +337,8 @@ class fsm( Model ):
         else:
           s.out[0].msg.des.value  = 16 + 4 + 0 # store in self PE[0] and pass a copy to neighbor 0
  
-          s.out[0].msg.src0.value = 5          # source 0 PE[0] (from neigbor 1)
-          s.out[0].msg.src1.value = 0          # source 1 PE[1]
+          s.out[1].msg.src0.value = 5          # source 0 PE[0] (from neigbor 1)
+          s.out[1].msg.src1.value = 0          # source 1 PE[1]
 
         # set mem_control_signals
 
@@ -344,6 +346,14 @@ class fsm( Model ):
         s.out[0].val.value       = 1
         s.out[1].val.value       = 1
       
+        if s.large.out == 0 and s.in_[0].val:
+          s.in_[0].rdy.value = 1
+          s.result.in_.value = s.in_[0].msg
+
+        elif s.large.out == 1 and s.in_[1].val:
+          s.in_[1].rdy.value = 1
+          s.result.in_.value = s.in_[1].msg
+
         # condition for exiting this state
         #if s.out[0].rdy and s.out[1].rdy:
         s.state.in_.value   = CMP_RESULT
@@ -370,49 +380,48 @@ class fsm( Model ):
         # Large stored in PE[0]
         # check comparison and wr smaller data back to mem
 
-        if s.large.out == 0 and s.in_[0].val:
+        #if s.large.out == 0:
 
-          s.in_[0].rdy.value = 1;
           # connect proper muxes to/from memory
-          if   s.in_[0].msg == 1:              # src0 (PE0) is greater, store from PE1 
-            s.ocm_reqs_sel.value  = PE1_MEM
+        if   s.result.out == 1:              # src0 (PE0) is greater, store from PE1 
+          s.ocm_reqs_sel.value  = PE1_MEM
  
-          elif s.in_[0].msg == 0:             # src1 (PE1) is greater, store from PE0
-            s.ocm_reqs_sel.value  = PE0_MEM
+        else:             # src1 (PE1) is greater, store from PE0
+          s.ocm_reqs_sel.value  = PE0_MEM
 
-          # select the operation in PE[x]
-          if s.in_[0].msg == 1:
-            s.out[1].msg.ctl.value = MEM_REQ
-          else:
-            s.out[0].msg.ctl.value = MEM_REQ
+        # select the operation in PE[x]
+        if s.result.out == 1:
+          s.out[1].msg.ctl.value = MEM_REQ
+        else:
+          s.out[0].msg.ctl.value = MEM_REQ
 
-          # set control signals in PE[x]
+        # set control signals in PE[x]
 
-          # set mem_control_signals
-          if s.in_[0].msg == 1:
-            s.out[1].msg.rd_wr.value = TYPE_WRITE
-            s.out[1].msg.src0.value  = 0
-            s.out[1].msg.addr.value  = s.WR_ADDR.out 
+        # set mem_control_signals
+        if s.result.out == 1:
+          s.out[1].msg.rd_wr.value = TYPE_WRITE
+          s.out[1].msg.src0.value  = 0
+          s.out[1].msg.addr.value  = s.WR_ADDR.out 
  
-          else:
-            s.out[0].msg.rd_wr.value = TYPE_WRITE
-            s.out[0].msg.src0.value  = 0
-            s.out[0].msg.addr.value  = s.WR_ADDR.out
-          
-          s.WR_ADDR.in_.value   = s.WR_ADDR.out + 2          
+        else:
+          s.out[0].msg.rd_wr.value = TYPE_WRITE
+          s.out[0].msg.src0.value  = 0
+          s.out[0].msg.addr.value  = s.WR_ADDR.out
+        
+        s.WR_ADDR.in_.value   = s.WR_ADDR.out + 2          
 
-          # set valid signals and update the data stored in large register
-          if   s.in_[0].msg == 1 and s.in_[0].val: 
-            s.out[1].val.value   = 1
-            s.large.in_.value    = 0
+        # set valid signals and update the data stored in large register
+        if   s.result.out == 1: 
+          s.out[1].val.value   = 1
+          s.large.in_.value    = 0
 
-          elif s.in_[0].msg == 0 and s.in_[0].val:
-            s.out[0].val.value  = 1
-            s.large.in_.value   = 1
+        else:
+          s.out[0].val.value  = 1
+          s.large.in_.value   = 1
 
-          #if (s.in_[0].msg == 1 and s.out[1].rdy) or (s.in_[0].msg == 0 and s.out[0].rdy) :
-          s.state.in_.value     = DEC_COUNTER
-          s.WR_ADDR.en.value    = 1  # update write address
+        #if (s.in_[0].msg == 1 and s.out[1].rdy) or (s.in_[0].msg == 0 and s.out[0].rdy) :
+        s.state.in_.value     = DEC_COUNTER
+        s.WR_ADDR.en.value    = 1  # update write address
              
         #if (s.large.out == 0 ):
         #  s.in_[0].rdy.value = (s.in_[0].msg == 1 and s.out[1].rdy) or (s.in_[0].msg == 0 and s.out[0].rdy) 
@@ -420,51 +429,49 @@ class fsm( Model ):
         # Large stored in PE[1]
         # check comparison and wr smaller data back to mem
 
-        elif s.large.out == 1 and s.in_[1].val:
-
-          s.in_[1].rdy.value = 1  # if large in PE[0], its doing comparison
-
-          # connect proper muxes to/from memory
-          if   s.in_[1].msg == 1:                 # src0 (PE0) is greater, store from PE1
-            s.ocm_reqs_sel.value  = PE1_MEM
-
-          elif s.in_[1].msg == 0:                 # src1 (PE1) is greater, store from PE0
-            s.ocm_reqs_sel.value  = PE0_MEM
-
-          # select the operation in PE[x]
-          if s.in_[1].msg == 1:
-            s.out[1].msg.ctl.value = MEM_REQ
-          else:
-            s.out[1].msg.ctl.value = MEM_REQ
-
-          # set control signals in PE[x]
-
-          # set mem_control_signals
-          if s.in_[1].msg == 1:
-            s.out[1].msg.rd_wr.value = TYPE_WRITE
-            s.out[1].msg.src0.value  = 0
-            s.out[1].msg.addr.value  = s.WR_ADDR.out
- 
-          else:
-            s.out[0].msg.rd_wr.value = TYPE_WRITE
-            s.out[0].msg.src0.value  = 0
-            s.out[0].msg.addr.value  = s.WR_ADDR.out
-
-          s.WR_ADDR.in_.value   = s.WR_ADDR.out + 2
-
-          # set valid signals and update the data stored in large register
-          if   s.in_[1].msg == 1: 
-            s.out[1].val.value   = 1
-            s.large.in_.value    = 0
-
-          elif s.in_[1].msg == 0:
-            s.out[0].val.value  = 1
-            s.large.in_.value   = 1
-
-          # condition for exiting this state
-          #if (s.in_[1].msg == 1 and s.out[1].rdy) or (s.in_[1].msg == 0 and s.out[0].rdy) :
-          s.state.in_.value    = DEC_COUNTER
-          s.WR_ADDR.en.value  = 1  # update write address
+#        elif s.large.out == 1:
+#
+#          # connect proper muxes to/from memory
+#          if   s.result.out == 1:                 # src0 (PE0) is greater, store from PE1
+#            s.ocm_reqs_sel.value  = PE1_MEM
+#
+#          else:                 # src1 (PE1) is greater, store from PE0
+#            s.ocm_reqs_sel.value  = PE0_MEM
+#
+#          # select the operation in PE[x]
+#          if s.in_[1].msg == 1:
+#            s.out[1].msg.ctl.value = MEM_REQ
+#          else:
+#            s.out[1].msg.ctl.value = MEM_REQ
+#
+#          # set control signals in PE[x]
+#
+#          # set mem_control_signals
+#          if s.in_[1].msg == 1:
+#            s.out[1].msg.rd_wr.value = TYPE_WRITE
+#            s.out[1].msg.src0.value  = 0
+#            s.out[1].msg.addr.value  = s.WR_ADDR.out
+# 
+#          else:
+#            s.out[0].msg.rd_wr.value = TYPE_WRITE
+#            s.out[0].msg.src0.value  = 0
+#            s.out[0].msg.addr.value  = s.WR_ADDR.out
+#
+#          s.WR_ADDR.in_.value   = s.WR_ADDR.out + 2
+#
+#          # set valid signals and update the data stored in large register
+#          if   s.in_[1].msg == 1: 
+#            s.out[1].val.value   = 1
+#            s.large.in_.value    = 0
+#
+#          elif s.in_[1].msg == 0:
+#            s.out[0].val.value  = 1
+#            s.large.in_.value   = 1
+#
+#          # condition for exiting this state
+#          #if (s.in_[1].msg == 1 and s.out[1].rdy) or (s.in_[1].msg == 0 and s.out[0].rdy) :
+#          s.state.in_.value    = DEC_COUNTER
+#          s.WR_ADDR.en.value  = 1  # update write address
        
 
 

@@ -36,6 +36,7 @@ class PeRTL( Model):
     s.go            = Wire( 1 )
     s.neighbor_rdy  = Wire(1)
     s.neighbor_val  = Wire(1)
+    s.temp          = Wire(3)
 
   def elaborate_logic( s ):
 
@@ -163,7 +164,7 @@ class PeRTL( Model):
             if s.in_neighbor[s.in_control.msg.src0[0]].val:
               s.src0_tmp.value = s.in_neighbor[s.in_control.msg.src0[0]].msg
             else: s.go.value = 0
-      
+          s.temp.value =  s.in_control.msg.src0
             
           # src1
           if s.in_control.msg.src1 < nReg:
