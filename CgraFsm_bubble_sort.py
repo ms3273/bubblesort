@@ -17,7 +17,6 @@ class CgraFsm( Model):
 
     s.in_mem        = InValRdyBundle (MemReqMsg(1,32,nWid))  # 3 type, 0 opaque, 32 addr, 1 len, 16 data 
     s.out_mem       = OutValRdyBundle(MemRespMsg(1,  nWid))  # 3 type, 0 opaque,  2 test, 1 len, 16 data
-#    s.out_mem_proxy = OutValRdyBundle(MemRespMsg(1,  nWid))
     s.in_done       = InPort(1)            # loading data is done    
 
     s.cgra = CgraRTL()
@@ -50,7 +49,6 @@ class CgraFsm( Model):
     # test sink to memory connection
 
     s.connect( s.out_mem,         s.cgra.out_mem       )
-#    s.connect( s.out_mem_proxy,   s.cgra.out_mem_proxy )
 
     # MEM SOURCE SEL
     
@@ -64,7 +62,7 @@ class CgraFsm( Model):
   #-----------------------------------------------------------------------
 
   def line_trace( s ):
-    return s.cgra.line_trace() + " | " + s.fsm.line_trace() + " | pe0_rdy {} | fsm0rdy {} " .format(s.cgra.in_control[0].rdy,s.fsm.out[0].rdy)  
+    return s.cgra.line_trace() + " | " + s.fsm.line_trace() # + " | pe0_rdy {} | fsm0rdy {} " .format(s.cgra.in_control[0].rdy,s.fsm.out[0].rdy)  
 
 
 

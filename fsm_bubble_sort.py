@@ -34,8 +34,9 @@ class fsm( Model ):
     s.state = RegRst(LOG_NUM_STATE, 0)
 
 
-    s.large = RegRst(1,0)  # 1 bit data to be stored with 0 initialized, i.e PE0 has large value
-    s.result = RegRst(1,0)  # 1 bit data to be stored with 0 initialized, i.e PE0 has large value
+    s.large   = RegRst(1,0)  # 1 bit data to be stored with 0 initialized, i.e PE0 has large value
+    s.result  = RegRst(1,0)  # 1 bit data to be stored with 0 initialized, i.e PE0 has large value
+    s.is_zero = RegRst(1,0)  # 1 bit data to be stored with 0 initialized, i.e PE0 has large value
 
     s.RD_ADDR = RegEnRst(32, 2)
 
@@ -507,7 +508,11 @@ class fsm( Model ):
         # set valid signals
         s.out[0].val.value       = 1
         s.out[1].val.value       = 1#s.out[0].rdy
-      
+     
+        if s.in_[1].val:
+          s.is_zero.in_.value =  s.in_[1].msg
+          s.in_[1].rdy.value  =  1
+ 
         # condition for exiting this state
         #if s.out[0].rdy and s.out[1].rdy:
         s.state.in_.value   = CHECK_COUNTER
@@ -529,7 +534,7 @@ class fsm( Model ):
         # set the next state register value in case we need to hold this state
         s.state.in_.value     = CHECK_COUNTER
         
-        if s.in_[1].msg == 0 and s.in_[1].val:
+        if s.is_zero.out == 0:    # s.in_[1].msg == 0 and s.in_[1].val:
 
           if s.large.out == 0:
             # connect proper muxes to/from memory
@@ -547,7 +552,7 @@ class fsm( Model ):
 
             # set valid signals
             s.out[1].val.value    = 1#s.in_[1].val
-            s.in_[1].rdy.value    = 1#s.out[1].rdy
+            #s.in_[1].rdy.value    = 1#s.out[1].rdy
 
             # condition for exiting this state
             #if s.out[1].rdy and s.in_[1].val:
@@ -571,14 +576,14 @@ class fsm( Model ):
 
             # set valid signals
             s.out[0].val.value    = 1#s.in_[1].val
-            s.in_[1].rdy.value    = 1#s.out[0].rdy
+            #s.in_[1].rdy.value    = 1#s.out[0].rdy
 
             # condition for exiting this state
             #if s.out[0].rdy and s.in_[1].val:
             s.state.in_.value   = WRITE_COMP
             s.RD_ADDR.en.value  = 1
 
-        elif s.in_[1].msg == 1 and s.in_[1].val:
+        else:
 
           if s.large.out == 0:
             # connect proper muxes to/from memory
@@ -599,7 +604,7 @@ class fsm( Model ):
 
             # set valid signals
             s.out[0].val.value    = 1#s.in_[1].val
-            s.in_[1].rdy.value    = 1#s.out[0].rdy
+            #s.in_[1].rdy.value    = 1#s.out[0].rdy
       
             # condition for exiting this state
             #if s.out[0].rdy and s.in_[1].val:
@@ -627,7 +632,7 @@ class fsm( Model ):
 
             # set valid signals
             s.out[1].val.value       = 1#s.in_[1].val
-            s.in_[1].rdy.value       = 1#s.out[1].rdy
+            #s.in_[1].rdy.value       = 1#s.out[1].rdy
       
             # condition for exiting this state
             #if s.out[1].rdy and s.in_[1].val:
@@ -669,6 +674,10 @@ class fsm( Model ):
         # set valid signals
         s.out[0].val.value   = 1#s.out[1].rdy
         s.out[1].val.value   = 1#s.out[0].rdy
+
+        if s.in_[1].val:
+          s.is_zero.in_.value =  s.in_[1].msg
+          s.in_[1].rdy.value  =  1
     
         # condition for exiting this state
         #if s.out[0].rdy and s.out[1].rdy:
@@ -689,9 +698,9 @@ class fsm( Model ):
 
         # set the next state register value in case we need to hold this state
         s.state.in_.value     = EXIT_CHECK
-        s.in_[1].rdy.value = 1
+        #s.in_[1].rdy.value = 1
         
-        if s.in_[1].msg == 0 and s.in_[1].val:
+        if s.is_zero.out == 0: #s.in_[1].msg == 0 and s.in_[1].val:
 
           # connect proper muxes to/from memory
 
@@ -708,7 +717,7 @@ class fsm( Model ):
           s.state.in_.value   = INIT_S0_READ
 
 
-        elif s.in_[1].msg == 1 and s.in_[1].val:
+        else:   #elif s.in_[1].msg == 1 and s.in_[1].val:
 
           # connect proper muxes to/from memory
 
@@ -794,6 +803,10 @@ class fsm( Model ):
         # set valid signals
         s.out[0].val.value   = 1#s.out[1].rdy
         s.out[1].val.value   = 1#s.out[0].rdy      
+
+        if s.in_[0].val:
+          s.is_zero.in_.value =  s.in_[0].msg
+          s.in_[0].rdy.value  =  1
     
         # condition for exiting this state
         #if s.out[0].rdy and s.out[1].rdy:
@@ -815,9 +828,9 @@ class fsm( Model ):
 
         # set the next state register value in case we need to hold this state
         s.state.in_.value     = END_CHECK
-        s.in_[0].rdy.value = 1
+       # s.in_[0].rdy.value = 1
         
-        if s.in_[0].msg == 0 and s.in_[0].val:
+        if s.is_zero.out == 0: #s.in_[0].msg == 0 and s.in_[0].val:
 
           # connect proper muxes to/from memory
 
@@ -832,7 +845,7 @@ class fsm( Model ):
           # condition for exiting this state
           s.state.in_.value   = EXIT_TRANSFER
 
-        elif s.in_[0].msg == 1 and s.in_[0].val:
+        else:   #elif s.in_[0].msg == 1 and s.in_[0].val:
           s.state.in_.value   = LOAD_TEST
 
 
@@ -841,23 +854,23 @@ class fsm( Model ):
   def line_trace ( s ):
     
     state2char = {
-      0   : "LOAD_TEST",
-      1   : "MEMREQ_DATASIZE",
+      0   : "LOAD_TEST       ",
+      1   : "MEMREQ_DATASIZE ",
       2   : "MEMRESP_DATASIZE",
-      3   : "SIZE_COPY",
-      4   : "INIT_S0_READ",
-      5   : "INIT_S0_WRITE",
-      6   : "WRITE_COMP",
-      7   : "CMP_RESULT",
-      8   : "DEC_COUNTER",
-      9   : "CHECK_COUNTER",
-      10  : "OUTER_LOOP_DEC",
-      11  : "EXIT_CHECK",
-      12  : "EXIT_TRANSFER",
-      13  : "EXIT_DEC",
-      14  : "END_CHECK",
+      3   : "SIZE_COPY       ",
+      4   : "INIT_S0_READ    ",
+      5   : "INIT_S0_WRITE   ",
+      6   : "WRITE_COMP      ",
+      7   : "CMP_RESULT      ",
+      8   : "DEC_COUNTER     ",
+      9   : "CHECK_COUNTER   ",
+      10  : "OUTER_LOOP_DEC  ",
+      11  : "EXIT_CHECK      ",
+      12  : "EXIT_TRANSFER   ",
+      13  : "EXIT_DEC        ",
+      14  : "END_CHECK       ",
     }
 
     s.state_str = state2char[s.state.out.uint()]
 
-    return "{}|{}".format( s.state_str, s.out[0].rdy )
+    return "{}".format( s.state_str )

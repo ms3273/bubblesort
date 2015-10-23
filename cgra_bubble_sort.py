@@ -25,7 +25,6 @@ class CgraRTL( Model):
 
     s.in_mem       = InValRdyBundle (MemReqMsg(1,32,nWid)) 
     s.out_mem      = OutValRdyBundle(MemRespMsg(1,  nWid))
-#    s.out_mem_proxy = OutValRdyBundle(MemRespMsg(1, nWid))
 
     s.ocm_reqs_sel  = InPort(2)
     s.ocm_resps_sel = InPort(4)
@@ -70,7 +69,6 @@ class CgraRTL( Model):
       m.out[0],  s.out_mem.msg,
       m.out[1],  s.pe[0].ocmresps.msg,
       m.out[2],  s.pe[1].ocmresps.msg,
-#      m.out[3],  s.out_mem_proxy.msg,
       m.out[3],  s.wr_capture.in_,
       m.in_,     s.ocm.resps[0].msg,
       m.sel,     s.ocm_resps_sel,
@@ -90,7 +88,6 @@ class CgraRTL( Model):
       s.out_mem.val.value         = 0
 #      s.pe[0].ocmresps.val.value  = 0
 #      s.pe[1].ocmresps.val.value  = 0
-#      s.out_mem_proxy.val.value   = 0
       s.ocm.resps[0].rdy.value    = 0
 
 #      s.ocm_reqs_sel.value = 0
@@ -130,7 +127,6 @@ class CgraRTL( Model):
         s.pe[0].ocmresps.val.value  = 0
 
       elif (s.ocm_resps_sel == MEM_PROXY):
-      #  s.out_mem_proxy.val.value = s.ocm.resps[0].val
         s.ocm.resps[0].rdy.value   =  1
         s.pe[0].ocmresps.val.value  = 0        
         s.pe[1].ocmresps.val.value  = 0
@@ -147,7 +143,8 @@ class CgraRTL( Model):
 #    #for i in range(nPE-1):
 #    for i in range(1):
 #      msg = msg + " () " + s.pe[i+1].line_trace()
-    return " req_rdy: {}| req_val: {}| resp_rdy: {} | resp_val: {}| pe0_val: {}| pe0_rdy: {}" .format(s.ocm.reqs[0].rdy, s.ocm.reqs[0].val, s.ocm.resps[0].rdy, s.ocm.resps[0].val, s.pe[0].ocmresps.val, s.pe[0].in_control.rdy ) + "() OCM - " + s.ocm.line_trace()
+#    return " req_rdy: {}| req_val: {}| resp_rdy: {} | resp_val: {}| pe0_val: {}| pe0_rdy: {}" .format(s.ocm.reqs[0].rdy, s.ocm.reqs[0].val, s.ocm.resps[0].rdy, s.ocm.resps[0].val, s.pe[0].ocmresps.val, s.pe[0].in_control.rdy ) + "() OCM - " + s.ocm.line_trace()
+    return " OCM - " + s.ocm.line_trace() + "|PE0: " + s.pe[0].line_trace() + "|PE1: " + s.pe[1].line_trace()
 
 
 

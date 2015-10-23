@@ -464,26 +464,26 @@ class PeRTL( Model):
   def line_trace( s ):
 
     inst2char = {
-      0 : "MEM_REQ ",
+      0 : "MEM_REQ  ",
       1 : "MEM_RESP ",
-      2 : "CGT",
-      3 : "SUB",
-      4 : "CEZ",
-      5 : "ADD",
-      6 : "MUL",
-      7 : "CPY",
-      8 : "DEC",
+      2 : "CGT      ",
+      3 : "SUB      ",
+      4 : "CEZ      ",
+      5 : "ADD      ",
+      6 : "MUL      ",
+      7 : "COPY     ",
+      8 : "DEC      ",
     }
 
-    if s.in_control.rdy:
+    if s.in_control.val:
       s.inst_str = inst2char[s.in_control.msg.ctl.uint()]
-    else: s.inst_str = "#  "
+    else: s.inst_str = "#        "
 #    s.rf.rd_addr[0].value = 0
 #    s.rf.rd_addr[1].value = 1
     #return " {} | {} > {} | {} > {} | {} > {} | {} " \
     #  .format( s.inst_str, s.in_mem, s.out_mem, s.in_neighbor[0], s.out_neighbor[0], s.in_neighbor[1], s.out_neighbor[1], s.out_fsm)
 
     # simpler line trace
-    return " {} | {} | {}" .format( s.inst_str, s.in_control.rdy, s.out_fsm.rdy)#, s.rf.rd_data[0], s.rf.rd_data[1] )
-
+#    return " {} | {} | {}" .format( s.inst_str, s.in_control.rdy, s.out_fsm.rdy)#, s.rf.rd_data[0], s.rf.rd_data[1] )
+    return " {} " .format( s.inst_str )
 

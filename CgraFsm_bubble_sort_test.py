@@ -20,7 +20,6 @@ class TestHarness( Model ):
     
     s.src_mem_in     = TestSource (MemReqMsg(1,32,nWid), src_mem_in_msgs,     src_delay  )
     s.sink_mem_out   = TestSink   (MemRespMsg(1,  nWid), sink_mem_out_msgs,   sink_delay )
-#    s.sink_mem_proxy = TestSink   (MemRespMsg(1,  nWid), sink_mem_proxy_msgs, sink_delay  )
 
     s.CgraFsm = CgraFsm_model
 
@@ -35,7 +34,6 @@ class TestHarness( Model ):
 
     # DUT to test
     s.connect( s.sink_mem_out.in_,   s.CgraFsm.out_mem       )
-#    s.connect( s.sink_mem_proxy.in_, s.CgraFsm.out_mem_proxy )
 
   def done( s ):
     return s.src_mem_in.done and s.sink_mem_out.done
@@ -87,13 +85,12 @@ def run_sel_test( ModelType, src_delay, sink_delay, test_verilog ):
 
 
 
-  src_mem_in_msgs   = [memreq(1, 0x0, 0, 5), memreq(1, 0x2, 0, 5), memreq(1, 0x4, 0, 3), memreq(1, 0x6, 0, 4), memreq(1, 0x8, 0, 10), memreq(1, 0xa, 0, 1) ]
+  src_mem_in_msgs   = [memreq(1, 0x0, 0, 6), memreq(1, 0x2, 0, 5), memreq(1, 0x4, 0, 3), memreq(1, 0x6, 0, 4), memreq(1, 0x8, 0, 19), memreq(1, 0xa, 0, 1), memreq(1, 0xc, 0, 7) ]
 
 
 
-  sink_mem_out_msgs = [memresp(0, 0, 0, 1), memresp(0, 0, 0, 3), memresp(0,0,0, 4), memresp(0,0,0, 5), memresp(0, 0, 0, 10)]
+  sink_mem_out_msgs = [memresp(0, 0, 0, 1), memresp(0, 0, 0, 3), memresp(0,0,0, 4), memresp(0,0,0, 5), memresp(0, 0, 0, 7), memresp(0, 0, 0, 19)]
 
-#  sink_mem_proxy_msgs = [memresp(1,0,0,0)]
 
   # Instantiate and elaborate the model
 
@@ -115,7 +112,7 @@ def run_sel_test( ModelType, src_delay, sink_delay, test_verilog ):
   print()
 
   sim.reset()
-  while not model.done() and a < 90:
+  while not model.done():
     a = a + 1
     sim.print_line_trace()
     sim.cycle()
