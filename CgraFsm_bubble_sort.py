@@ -25,10 +25,11 @@ class CgraFsm( Model):
 
     # queue for control word
     #s.ctr_q = SingleElementBypassQueue[nPE](inst_msg())
-    #s.ctr_q = SingleElementNormalQueue[nPE](inst_msg())
-    s.ctr_q = NormalQueue[nPE](2, inst_msg())
+    # s.ctr_q = SingleElementNormalQueue[nPE](inst_msg())
+    #s.ctr_q = NormalQueue[nPE](2, inst_msg())
 
     # queue for cgra-to-fsm response
+
     s.resp_q = SingleElementBypassQueue[nPE](1)
     #s.resp_q = SingleElementNormalQueue[nPE](1)
 
@@ -37,7 +38,7 @@ class CgraFsm( Model):
       s.connect(s.resp_q[x].deq,   s.fsm.in_[x]          )
       #s.connect (s.cgra.out_fsm[x] , s.fsm.in_[x]          )
 
-      #s.connect(s.fsm.out[x],      s.ctr_q[x].enq        )
+     # s.connect(s.fsm.out[x],      s.ctr_q[x].enq        )
       #s.connect(s.ctr_q[x].deq,    s.cgra.in_control[x]  )
       s.connect(s.fsm.out[x], s.cgra.in_control[x])
 
@@ -63,7 +64,7 @@ class CgraFsm( Model):
   #-----------------------------------------------------------------------
 
   def line_trace( s ):
-    return s.cgra.line_trace() + " | " + s.fsm.line_trace()
+    return s.cgra.line_trace() + " | " + s.fsm.line_trace() + " | pe0_rdy {} | fsm0rdy {} " .format(s.cgra.in_control[0].rdy,s.fsm.out[0].rdy)  
 
 
 

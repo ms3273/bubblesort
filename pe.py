@@ -69,7 +69,6 @@ class PeRTL( Model):
 
           s.go.value            = 1
           s.neighbor_val.value  = 1
-          s.in_control.rdy.value = 0
           if s.ocmreqs.rdy :
             if  (s.in_control.msg.rd_wr == TYPE_READ):
               s.ocmreqs.msg.type_.value  = TYPE_READ
@@ -99,7 +98,7 @@ class PeRTL( Model):
           s.ocmreqs.val.value    = s.neighbor_val
           if s.in_control.msg.src0 >= nReg and s.go and (s.in_control.msg.rd_wr == TYPE_WRITE):
             s.in_neighbor[s.in_control.msg.src0[0]].rdy.value = 1
-          s.in_control.rdy.value = s.go and s.neighbor_val
+          s.in_control.rdy.value = 0#s.go and s.neighbor_val
           #if s.go and s.neighbor_val: print "pe"
 
         #=========================================================================
@@ -133,7 +132,7 @@ class PeRTL( Model):
               
           # set control signals
           s.ocmresps.rdy.value   = s.neighbor_rdy
-          s.in_control.rdy.value = 0# s.neighbor_rdy and s.ocmresps.val
+          #s.in_control.rdy.value =  s.neighbor_rdy and s.ocmresps.val
 
           if s.go:
             if s.in_control.msg.des[nLogReg]:
@@ -182,7 +181,7 @@ class PeRTL( Model):
             else: s.out_fsm.msg.value = 0
        
           # set control signals
-          s.in_control.rdy.value = s.out_fsm.rdy and s.go
+          s.in_control.rdy.value = 0#s.out_fsm.rdy and s.go
           s.out_fsm.val.value    = s.go
           if s.in_control.msg.src0 >= nReg:
             s.in_neighbor[s.in_control.msg.src0[0]].rdy.value = s.out_fsm.rdy
@@ -215,7 +214,7 @@ class PeRTL( Model):
           
           # set control signals
           #if s.go:
-          s.in_control.rdy.value = s.out_fsm.rdy and s.go
+          s.in_control.rdy.value = 0#s.out_fsm.rdy and s.go
           s.out_fsm.val.value    = s.go
           if s.in_control.msg.src0 >= nReg:
             s.in_neighbor[s.in_control.msg.src0[0]].rdy.value = s.out_fsm.rdy
@@ -258,7 +257,7 @@ class PeRTL( Model):
             s.rf.wr_data.value = s.des_tmp  
 
           # set control signals
-          s.in_control.rdy.value = s.go and s.neighbor_rdy
+          s.in_control.rdy.value = 0#s.go and s.neighbor_rdy
 
           if s.in_control.msg.src0 >= nReg:
             s.in_neighbor[s.in_control.msg.src0[0]].rdy.value = s.neighbor_rdy
@@ -308,7 +307,7 @@ class PeRTL( Model):
             s.rf.wr_data.value = s.des_tmp  
 
           # set control signals
-          s.in_control.rdy.value = s.go and s.neighbor_rdy
+          s.in_control.rdy.value = 0#s.go and s.neighbor_rdy
           if s.in_control.msg.src0 >= nReg:
             s.in_neighbor[s.in_control.msg.src0[0]].rdy.value = s.neighbor_rdy
           

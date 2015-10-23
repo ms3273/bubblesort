@@ -75,40 +75,65 @@ class CgraRTL( Model):
     )    
     
 
-
+    s.test = Wire(1)
     @s.combinational
     def connections():
+      s.test.value = 0
+      s.in_mem.rdy.value         = 0
+#      s.pe[0].ocmreqs.rdy.value  = 0
+#      s.pe[1].ocmreqs.rdy.value  = 0
+
+      s.ocm.reqs[0].val.value    = 0
+      
+      s.out_mem.val.value         = 0
+#      s.pe[0].ocmresps.val.value  = 0
+#      s.pe[1].ocmresps.val.value  = 0
+      s.out_mem_proxy.val.value   = 0
+      s.ocm.resps[0].rdy.value    = 0
 
 #      s.ocm_reqs_sel.value = 0
       if(s.ocm_reqs_sel == TEST_MEM):     
         s.in_mem.rdy.value         = s.ocm.reqs[0].rdy
         s.ocm.reqs[0].val.value    = s.in_mem.val
+        s.pe[0].ocmreqs.rdy.value  = 0
+        s.pe[1].ocmreqs.rdy.value  = 0
 
       elif(s.ocm_reqs_sel == PE0_MEM):
         s.pe[0].ocmreqs.rdy.value  = s.ocm.reqs[0].rdy
         s.ocm.reqs[0].val.value    = s.pe[0].ocmreqs.val
+        s.pe[1].ocmreqs.rdy.value  = 0
 
       elif(s.ocm_reqs_sel == PE1_MEM):
         s.pe[1].ocmreqs.rdy.value  = s.ocm.reqs[0].rdy
         s.ocm.reqs[0].val.value    = s.pe[1].ocmreqs.val
+        s.pe[0].ocmreqs.rdy.value  = 0
 
 
 #      s.ocm_resps_sel.value = MEM_TEST
       if (s.ocm_resps_sel == MEM_TEST):
         s.out_mem.val.value        = s.ocm.resps[0].val
         s.ocm.resps[0].rdy.value   = s.out_mem.rdy
+        s.pe[0].ocmresps.val.value  = 0
+        s.pe[1].ocmresps.val.value  = 0
+
 
       elif (s.ocm_resps_sel == MEM_PE0):
         s.pe[0].ocmresps.val.value = s.ocm.resps[0].val
         s.ocm.resps[0].rdy.value   = s.pe[0].ocmresps.rdy
+        s.pe[1].ocmresps.val.value  = 0
 
       elif (s.ocm_resps_sel == MEM_PE1):
         s.pe[1].ocmresps.val.value = s.ocm.resps[0].val
         s.ocm.resps[0].rdy.value   = s.pe[1].ocmresps.rdy
+        s.pe[0].ocmresps.val.value  = 0
 
       elif (s.ocm_resps_sel == MEM_PROXY):
         s.out_mem_proxy.val.value = s.ocm.resps[0].val
         s.ocm.resps[0].rdy.value   = s.out_mem_proxy.rdy
+        s.pe[0].ocmresps.val.value  = 0        
+        s.pe[1].ocmresps.val.value  = 0
+
+#      s.test.value = s.ocm_resps_sel == MEM_PROXY
 
 
   #-----------------------------------------------------------------------
@@ -120,7 +145,7 @@ class CgraRTL( Model):
 #    #for i in range(nPE-1):
 #    for i in range(1):
 #      msg = msg + " () " + s.pe[i+1].line_trace()
-    return " req_rdy: {}| req_val: {}| resp_rdy: {} | resp_val: {}| pe0_val: {}" .format(s.ocm.reqs[0].rdy, s.ocm.reqs[0].val, s.ocm.resps[0].rdy, s.ocm.resps[0].val, s.pe[0].ocmresps.val ) + "() OCM - " + s.ocm.line_trace()
+    return " req_rdy: {}| req_val: {}| resp_rdy: {} | resp_val: {}| pe0_val: {}| pe0_rdy: {}" .format(s.ocm.reqs[0].rdy, s.ocm.reqs[0].val, s.ocm.resps[0].rdy, s.ocm.resps[0].val, s.pe[0].ocmresps.val, s.pe[0].in_control.rdy ) + "() OCM - " + s.ocm.line_trace()
 
 
 

@@ -39,6 +39,8 @@ class fsm( Model ):
 
     s.WR_ADDR = RegEnRst(32, 2) 
 
+    s.test    = Wire(1)
+
     # State definition
     LOAD_TEST         = 0
     MEMREQ_DATASIZE   = 1
@@ -69,11 +71,11 @@ class fsm( Model ):
     @s.combinational
     def combinational_module():
 
-      s.ocm_reqs_sel.value  = PE0_MEM
+      s.ocm_reqs_sel.value  = PE1_MEM
       s.ocm_resps_sel.value = MEM_PROXY
       s.RD_ADDR.en.value    = 0
       s.WR_ADDR.en.value    = 0
-
+      s.test.value          = 0
 #      for x in range(nPE):
 #        s.in_[x].rdy.value  = 0
 #        s.out[x].val.value  = 0
@@ -118,25 +120,25 @@ class fsm( Model ):
         s.state.in_.value     = MEMREQ_DATASIZE
         
 
-        # connect proper muxes to/from memory
+   #     # connect proper muxes to/from memory
+        s.test.value          = 1
         s.ocm_reqs_sel.value  = PE0_MEM
-
-        # select the operation in PE[x]
+   #     # select the operation in PE[x]
         s.out[0].msg.ctl.value = MEM_REQ
 
-        # set control signals in PE[x]
-        
+   #     # set control signals in PE[x]
+   #     
 
-        # set mem_control in PE
+   #     # set mem_control in PE
         s.out[0].msg.rd_wr.value = TYPE_READ 
         s.out[0].msg.addr.value  = BASE
-   
-        # set valid signals
+   #
+   #     # set valid signals
         s.out[0].val.value       = 1
 
         # condition for exiting this state        
-        if s.out[0].rdy:
-          print s.state.out
+        if 1:
+          #print s.state.out
           s.state.in_.value   = MEMRESP_DATASIZE        
 
       #------------------------------------------------------------------
@@ -155,22 +157,27 @@ class fsm( Model ):
         s.state.in_.value     = MEMRESP_DATASIZE
         
         # connect proper muxes to/from memory
-        s.ocm_resps_sel.value  = MEM_PE0
+        s.ocm_resps_sel.value  = MEM_PE1
 
         # select the operation in PE[x]
-        s.out[0].msg.ctl.value = MEM_RESP
+        s.out[0].msg.ctl.value = DEC
+        s.out[1].msg.ctl.value = MEM_RESP
 
         # set control signals in PE[x] 
+        s.out[0].msg.src0.value = 4
         s.out[0].msg.des.value = 16+3
+
+        s.out[1].msg.des.value = 16+8+3
 
         # set mem_control_signals
 
         # set valid signals
         s.out[0].val.value       = 1
-      
+        s.out[1].val.value       = 1
+
         # condition for exiting this state
-        if s.out[0].rdy:
-          s.state.in_.value   = SIZE_COPY
+      #  if s.out[0].rdy:
+        s.state.in_.value   = SIZE_COPY
 
 
 
@@ -193,24 +200,23 @@ class fsm( Model ):
 
         # select the operation in PE[x]
         s.out[0].msg.ctl.value = COPY
-        s.out[1].msg.ctl.value = COPY
 
         # set control signals in PE[x]
         s.out[0].msg.src0.value = 3 
-        s.out[0].msg.des.value  = 16+ 4 + 2
+        s.out[0].msg.des.value  = 16 + 2
         
-        s.out[1].msg.src0.value = 5
-        s.out[1].msg.des.value  = 16 + 3
+        #s.out[1].msg.src0.value = 5
+        #s.out[1].msg.des.value  = 16 + 3
 
         # set mem_control_signals
 
         # set valid signals
-        s.out[0].val.value       = s.out[1].rdy
-        s.out[1].val.value       = s.out[0].rdy
+        s.out[0].val.value       = 1
+        #s.out[1].val.value       = 1
 
         # condition for exiting this state
-        if s.out[0].rdy and s.out[1].rdy :
-          s.state.in_.value   = INIT_S0_READ
+        #if s.out[0].rdy and s.out[1].rdy :
+        s.state.in_.value   = INIT_S0_READ
 
 
       #------------------------------------------------------------------
@@ -229,7 +235,7 @@ class fsm( Model ):
         s.state.in_.value = INIT_S0_READ
 
         # connect proper muxes to/from memory
-        s.ocm_reqs_sel.value  = MEM_PE0
+        s.ocm_reqs_sel.value  = PE0_MEM
         
         # select the operation in PE[x]
         s.out[0].msg.ctl.value = MEM_REQ
@@ -246,9 +252,9 @@ class fsm( Model ):
         s.out[0].val.value       = 1
 
         # condition for exiting this state        
-        if s.out[0].rdy:
-          s.state.in_.value   = INIT_S0_WRITE
-          s.RD_ADDR.en.value  = 1
+        #if s.out[0].rdy:
+        s.state.in_.value   = INIT_S0_WRITE
+        s.RD_ADDR.en.value  = 1
 
       #------------------------------------------------------------------
       # INIT_S0_WRITE and S1_READ state
@@ -280,16 +286,17 @@ class fsm( Model ):
         # set mem_control_signals
         s.out[1].msg.rd_wr.value = TYPE_READ 
         s.out[1].msg.addr.value  = s.RD_ADDR.out
+        s.RD_ADDR.in_.value = s.RD_ADDR.out + 2
 
 
         # set valid signals
-        s.out[0].val.value       = s.out[1].rdy
-        s.out[1].val.value       = s.out[0].rdy
+        s.out[0].val.value       = 1
+        s.out[1].val.value       = 1
  
         # condition for exiting this state
-        if s.out[0].rdy and s.out[1].rdy:
-          s.state.in_.value   = WRITE_COMP
-          s.RD_ADDR.in_.value = s.RD_ADDR.out + 2
+        #if s.out[0].rdy and s.out[1].rdy:
+        s.state.in_.value   = WRITE_COMP
+        s.RD_ADDR.en.value  = 1
 
 
       #------------------------------------------------------------------
@@ -334,12 +341,12 @@ class fsm( Model ):
         # set mem_control_signals
 
         # set valid signals
-        s.out[0].val.value       = s.out[1].rdy
-        s.out[1].val.value       = s.out[0].rdy
+        s.out[0].val.value       = 1
+        s.out[1].val.value       = 1
       
         # condition for exiting this state
-        if s.out[0].rdy and s.out[1].rdy:
-          s.state.in_.value   = CMP_RESULT
+        #if s.out[0].rdy and s.out[1].rdy:
+        s.state.in_.value   = CMP_RESULT
 
 
 
@@ -365,7 +372,7 @@ class fsm( Model ):
 
         if s.large.out == 0 and s.in_[0].val:
 
-
+          s.in_[0].rdy.value = 1;
           # connect proper muxes to/from memory
           if   s.in_[0].msg == 1:              # src0 (PE0) is greater, store from PE1 
             s.ocm_reqs_sel.value  = PE1_MEM
@@ -403,12 +410,12 @@ class fsm( Model ):
             s.out[0].val.value  = 1
             s.large.in_.value   = 1
 
-          if (s.in_[0].msg == 1 and s.out[1].rdy) or (s.in_[0].msg == 0 and s.out[0].rdy) :
-            s.state.in_.value     = DEC_COUNTER
-            s.WR_ADDR.en.value    = 1  # update write address
+          #if (s.in_[0].msg == 1 and s.out[1].rdy) or (s.in_[0].msg == 0 and s.out[0].rdy) :
+          s.state.in_.value     = DEC_COUNTER
+          s.WR_ADDR.en.value    = 1  # update write address
              
-        if (s.large.out == 0 ):
-          s.in_[0].rdy.value = (s.in_[0].msg == 1 and s.out[1].rdy) or (s.in_[0].msg == 0 and s.out[0].rdy) 
+        #if (s.large.out == 0 ):
+        #  s.in_[0].rdy.value = (s.in_[0].msg == 1 and s.out[1].rdy) or (s.in_[0].msg == 0 and s.out[0].rdy) 
 
         # Large stored in PE[1]
         # check comparison and wr smaller data back to mem
@@ -419,10 +426,10 @@ class fsm( Model ):
 
           # connect proper muxes to/from memory
           if   s.in_[1].msg == 1:                 # src0 (PE0) is greater, store from PE1
-            ocm_reqs_sel.value  = PE1_MEM
+            s.ocm_reqs_sel.value  = PE1_MEM
 
           elif s.in_[1].msg == 0:                 # src1 (PE1) is greater, store from PE0
-            ocm_reqs_sel.value  = PE0_MEM
+            s.ocm_reqs_sel.value  = PE0_MEM
 
           # select the operation in PE[x]
           if s.in_[1].msg == 1:
@@ -455,9 +462,9 @@ class fsm( Model ):
             s.large.in_.value   = 1
 
           # condition for exiting this state
-          if (s.in_[1].msg == 1 and s.out[1].rdy) or (s.in_[1].msg == 0 and s.out[0].rdy) :
-            s.state.in_.value    = DEC_COUNTER
-            s.WR_ADDR.en.value  = 1  # update write address
+          #if (s.in_[1].msg == 1 and s.out[1].rdy) or (s.in_[1].msg == 0 and s.out[0].rdy) :
+          s.state.in_.value    = DEC_COUNTER
+          s.WR_ADDR.en.value  = 1  # update write address
        
 
 
@@ -491,12 +498,12 @@ class fsm( Model ):
         # set mem_control_signals
 
         # set valid signals
-        s.out[0].val.value       = s.out[1].rdy
-        s.out[1].val.value       = s.out[0].rdy
+        s.out[0].val.value       = 1
+        s.out[1].val.value       = 1#s.out[0].rdy
       
         # condition for exiting this state
-        if s.out[0].rdy and s.out[1].rdy:
-          s.state.in_.value   = CHECK_COUNTER
+        #if s.out[0].rdy and s.out[1].rdy:
+        s.state.in_.value   = CHECK_COUNTER
 
 
 
@@ -532,13 +539,13 @@ class fsm( Model ):
             s.RD_ADDR.in_.value  = s.RD_ADDR.out + 2
 
             # set valid signals
-            s.out[1].val.value    = s.in_[1].val
-            s.in_[1].rdy.value    = s.out[1].rdy
+            s.out[1].val.value    = 1#s.in_[1].val
+            s.in_[1].rdy.value    = 1#s.out[1].rdy
 
             # condition for exiting this state
-            if s.out[1].rdy and s.in_[1].val:
-              s.state.in_.value    = WRITE_COMP
-              s.RD_ADDR.en.value   = 1
+            #if s.out[1].rdy and s.in_[1].val:
+            s.state.in_.value    = WRITE_COMP
+            s.RD_ADDR.en.value   = 1
 
           elif s.large.out == 1:
             # connect proper muxes to/from memory
@@ -556,13 +563,13 @@ class fsm( Model ):
             
 
             # set valid signals
-            s.out[0].val.value    = s.in_[1].val
-            s.in_[1].rdy.value    = s.out[0].rdy
+            s.out[0].val.value    = 1#s.in_[1].val
+            s.in_[1].rdy.value    = 1#s.out[0].rdy
 
             # condition for exiting this state
-            if s.out[0].rdy and s.in_[1].val:
-              s.state.in_.value   = WRITE_COMP
-              s.RD_ADDR.en.value  = 1
+            #if s.out[0].rdy and s.in_[1].val:
+            s.state.in_.value   = WRITE_COMP
+            s.RD_ADDR.en.value  = 1
 
         elif s.in_[1].msg == 1 and s.in_[1].val:
 
@@ -580,15 +587,18 @@ class fsm( Model ):
             s.out[0].msg.rd_wr.value = TYPE_WRITE 
             s.out[0].msg.addr.value  = s.WR_ADDR.out
             s.WR_ADDR.in_.value      = BASE + 2 
+            s.RD_ADDR.in_.value      = BASE + 2
+            s.large.in_.value        = 0
 
             # set valid signals
-            s.out[0].val.value    = s.in_[1].val
-            s.in_[1].rdy.value    = s.out[0].rdy
+            s.out[0].val.value    = 1#s.in_[1].val
+            s.in_[1].rdy.value    = 1#s.out[0].rdy
       
             # condition for exiting this state
-            if s.out[0].rdy and s.in_[1].val:
-              s.state.in_.value      = OUTER_LOOP_DEC
-              s.WR_ADDR.en.value     = 1
+            #if s.out[0].rdy and s.in_[1].val:
+            s.state.in_.value      = OUTER_LOOP_DEC
+            s.WR_ADDR.en.value     = 1
+            s.RD_ADDR.en.value  = 1
 
           elif s.large.out == 1:
 
@@ -605,15 +615,18 @@ class fsm( Model ):
             s.out[1].msg.rd_wr.value = TYPE_WRITE
             s.out[1].msg.addr.value  = s.WR_ADDR.out
             s.WR_ADDR.in_.value      = BASE + 2
+            s.RD_ADDR.in_.value      = BASE + 2
+            s.large.in_.value        = 0
 
             # set valid signals
-            s.out[1].val.value       = s.in_[1].val
-            s.in_[1].rdy.value       = s.out[1].rdy
+            s.out[1].val.value       = 1#s.in_[1].val
+            s.in_[1].rdy.value       = 1#s.out[1].rdy
       
             # condition for exiting this state
-            if s.out[1].rdy and s.in_[1].val:
-              s.state.in_.value      = OUTER_LOOP_DEC
-              s.WR_ADDR.en.value     = 1 
+            #if s.out[1].rdy and s.in_[1].val:
+            s.state.in_.value      = OUTER_LOOP_DEC
+            s.WR_ADDR.en.value     = 1 
+            s.RD_ADDR.en.value  = 1
 
 
 
@@ -640,19 +653,19 @@ class fsm( Model ):
 
         # set control signals in PE[x]
         s.out[0].msg.src0.value = 3
-        s.out[0].msg.des.value  = 16 + 4 + 2
+        s.out[0].msg.des.value  = 16 + 4 + 3
 
         s.out[1].msg.src0.value = 5
 
         # set mem_control_signals
 
         # set valid signals
-        s.out[0].val.value   = s.out[1].rdy
-        s.out[1].val.value   = s.out[0].rdy
+        s.out[0].val.value   = 1#s.out[1].rdy
+        s.out[1].val.value   = 1#s.out[0].rdy
     
         # condition for exiting this state
-        if s.out[0].rdy and s.out[1].rdy:
-          s.state.in_.value   = EXIT_CHECK
+        #if s.out[0].rdy and s.out[1].rdy:
+        s.state.in_.value   = EXIT_CHECK
 
 
       #------------------------------------------------------------------
@@ -676,13 +689,14 @@ class fsm( Model ):
           # connect proper muxes to/from memory
 
           # select the operation in PE[x]
-
+          s.out[0].msg.ctl.value = COPY
           # set control signals in PE[x]
-
+          s.out[0].msg.src0.value = 3
+          s.out[0].msg.des.value  = 16 + 2
           # set mem_control_signals
 
           # set valid signals
-    
+          s.out[0].val.value = 1 
           # condition for exiting this state
           s.state.in_.value   = INIT_S0_READ
 
@@ -721,7 +735,6 @@ class fsm( Model ):
         # connect proper muxes to/from memory
         s.ocm_reqs_sel.value   = PE1_MEM
 
-        s.ocm_resps_sel.value  = MEM_TEST
 
         # select the operation in PE[x]
         s.out[1].msg.ctl.value = MEM_REQ
@@ -737,9 +750,9 @@ class fsm( Model ):
         s.out[1].val.value       = 1
       
         # condition for exiting this state
-        if s.out[1].rdy:
-          s.state.in_.value   = EXIT_DEC
-          s.RD_ADDR.en.value  = 1
+        #if s.out[1].rdy:
+        s.state.in_.value   = EXIT_DEC
+        s.RD_ADDR.en.value  = 1
 
       #------------------------------------------------------------------
       # EXIT_DEC state
@@ -757,6 +770,7 @@ class fsm( Model ):
         s.state.in_.value     = EXIT_DEC
 
         # connect proper muxes to/from memory
+        s.ocm_resps_sel.value  = MEM_TEST
 
         # select the operation in PE[x]
         s.out[0].msg.ctl.value = CEZ
@@ -771,12 +785,12 @@ class fsm( Model ):
         # set mem_control_signals
 
         # set valid signals
-        s.out[0].val.value   = s.out[1].rdy
-        s.out[1].val.value   = s.out[0].rdy      
+        s.out[0].val.value   = 1#s.out[1].rdy
+        s.out[1].val.value   = 1#s.out[0].rdy      
     
         # condition for exiting this state
-        if s.out[0].rdy and s.out[1].rdy:
-          s.state.in_.value   = END_CHECK
+        #if s.out[0].rdy and s.out[1].rdy:
+        s.state.in_.value   = END_CHECK
 
 
 

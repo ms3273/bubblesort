@@ -87,13 +87,13 @@ def run_sel_test( ModelType, src_delay, sink_delay, test_verilog ):
 
 
 
-  src_mem_in_msgs   = [memreq(1, 0x0, 0, 2), memreq(1, 0x2, 0, 5), memreq(1, 0x4, 0, 2) ]
+  src_mem_in_msgs   = [memreq(1, 0x0, 0, 5), memreq(1, 0x2, 0, 5), memreq(1, 0x4, 0, 3), memreq(1, 0x6, 0, 4), memreq(1, 0x8, 0, 10), memreq(1, 0xa, 0, 1) ]
 
 
 
-  sink_mem_out_msgs = [memresp(0, 0, 0, 2), memresp(0,0,0, 5)]
+  sink_mem_out_msgs = [memresp(0, 0, 0, 1), memresp(0, 0, 0, 3), memresp(0,0,0, 4), memresp(0,0,0, 5), memresp(0, 0, 0, 10)]
 
-  sink_mem_proxy_msgs = [memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0)]
+  sink_mem_proxy_msgs = [memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0), memresp(1,0,0,0)]
 
   # Instantiate and elaborate the model
 
@@ -102,6 +102,7 @@ def run_sel_test( ModelType, src_delay, sink_delay, test_verilog ):
     model_under_test = TranslationTool( model_under_test )
 
   model = TestHarness( model_under_test, src_mem_in_msgs, sink_mem_out_msgs, sink_mem_proxy_msgs, src_delay, sink_delay )
+  model.vcd_file = "regincr-sim.vcd"
   model.elaborate()
 
   # Create a simulator using the simulation tool
@@ -109,7 +110,6 @@ def run_sel_test( ModelType, src_delay, sink_delay, test_verilog ):
   sim = SimulationTool( model )
 
   # Run the simulation
-
   print()
 
   sim.reset()

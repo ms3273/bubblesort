@@ -3,7 +3,7 @@ from pymtl import *
 # constant definition
 #=============================================================
 
-MEM_REQ  = 0
+MEM_REQ  = 9
 MEM_RESP = 1
 CGT      = 2
 SUB      = 3
@@ -12,7 +12,6 @@ ADD      = 5
 MUL      = 6
 COPY     = 7
 DEC      = 8
-SWAP     = 9
 
 nWid    = 16
 nReg    = 4
